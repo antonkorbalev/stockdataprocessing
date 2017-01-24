@@ -13,8 +13,11 @@ class ClassifierTrainer(object):
     __scale = False
     __compareIndex = 6
 
+    def predic_price_for_row(self, row):
+        return self.__model.predict(row)
+
     # predicts price for last used parameters
-    def predict_price(self, data):
+    def predict_price_for_data(self, data):
         data = data.take(self.__indicies, axis=1)
         if self.__scale:
             data = pp.scale(data)
