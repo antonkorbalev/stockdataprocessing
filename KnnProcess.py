@@ -48,9 +48,9 @@ def check_success(contractName, period, marketCode, em, indicies,compareIndex, t
 
     return round(100 * float(ins) / float(ins+outs), 2)
 
-indicies=[6]
-compareIndex=0
-period = 5
+indicies=[2,3,4,5,6]
+compareIndex=3
+period = 1
 
 ddata = pandas.read_csv('Derivatives.dat').as_matrix()
 ests = list()
