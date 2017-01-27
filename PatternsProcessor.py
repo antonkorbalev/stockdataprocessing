@@ -4,7 +4,7 @@ import numpy
 class PatternProcessor(object):
     """ Contains methods for processing patterns """
 
-    def get_patterns(self, data, nCandles, scale, indicies, compareIndex):
+    def get_patterns(self, data, nCandles, indicies, compareIndex):
         """ Generates patterns for n candles
             Data - data to process
             nCandles - N candles in a template
@@ -15,8 +15,6 @@ class PatternProcessor(object):
         classes = list()
         rows = list()
         data = data.take(indicies, axis=1).as_matrix()
-        if scale:
-            data = pp.scale(data)
         for i in range(nCandles,data.__len__()-2):
             # take N candles and split into line (dimension reduction)
             row = []
