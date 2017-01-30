@@ -25,7 +25,9 @@ def get_prices():
         return
     asks.append(ask)
     bids.append(bid)
-    lastPrice = (asks[len(asks)-1] + bids[len(bids)-1]) / 2
+    lastPrice = (ask+bid)/2
+    if (len(asks) > 1) and (len(bids) > 1):
+        lastPrice = (asks[len(asks)-2] + bids[len(bids)-2]) / 2
     pChange = (ask+bid)/2 - lastPrice
     price_change.append(pChange)
     f_back_log.write('%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status')))
