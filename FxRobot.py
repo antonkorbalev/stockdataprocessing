@@ -10,6 +10,9 @@ asks = list()
 bids = list()
 price_change = list()
 f_back_log = open(path.relpath(config.back_log_path + '/' + config.insName + '_' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))+'.log', 'a');
+time = 0
+times = list()
+
 if config.write_back_log:
     print 'Backlog file name:', f_back_log.name
     f_back_log.write('DateTime,Instrument,ASK,BID,Price change,Status \n')
@@ -30,11 +33,14 @@ def get_prices():
         lastPrice = (asks[len(asks)-2] + bids[len(bids)-2]) / 2
     pChange = (ask+bid)/2 - lastPrice
     price_change.append(pChange)
-    f_back_log.write('%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status')))
+    if config.write_back_log:
+        f_back_log.write('%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status')))
     plt.clf()
-    plt.plot(price_change, label='Price change', color='red')
+    times.append(time);
+    plt.plot(times, price_change, label='Price change', color='blue')
     plt.title(config.insName)
     plt.xlabel('Time, s')
+
     plt.legend(loc='upper right')
     if (len(asks)>config.maxLength):
         asks.pop(0)
@@ -42,6 +48,8 @@ def get_prices():
         bids.pop(0)
     if (len(price_change) > config.maxLength):
         price_change.pop(0)
+    if (len(times) > config.maxLength):
+        times.pop(0)
 
 plt.ion()
 plt.grid(True)
@@ -49,5 +57,6 @@ plt.grid(True)
 while True:
     get_prices()
     plt.pause(config.period)
+    time = time + config.period
 
 
