@@ -16,6 +16,8 @@ times = list()
 last_result = 'hold'
 deals = list()
 deal_price = 0
+max_spread = 0
+min_spread = 1
 
 if config.write_back_log:
     print 'Backlog file name:', f_back_log.name
@@ -57,6 +59,8 @@ def get_real_prices():
 def process_data(price_change, ask, bid):
     result = 'hold'
     global last_result
+    global  max_spread
+    global  min_spread
     plt.clf()
     times.append(time)
     hmin = 0
@@ -95,7 +99,15 @@ def process_data(price_change, ask, bid):
     plt.subplot(2,1,2)
     plt.hist(deals,color='blue')
     plt.xlabel('Profits of price change')
-    plt.axvline(x = ask - bid, color='red')
+    spread = ask - bid
+    if max_spread < spread :
+        max_spread = spread
+    if min_spread > spread:
+        min_spread = spread
+    plt.axvline(x = spread, color='red', label='SPREAD')
+    plt.axvline(x = max_spread, color='gray', linestyle=":")
+    plt.axvline(x = min_spread, color='gray', linestyle=":")
+    plt.legend(loc='upper left')
 
     if len(asks) > config.maxLength:
         asks.pop(0)
