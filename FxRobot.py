@@ -14,6 +14,8 @@ f_back_log = open(path.relpath(config.back_log_path + '/' + config.insName + '_'
 time = 0
 times = list()
 last_result = 'hold'
+deals = list()
+deal_price = 0
 
 if config.write_back_log:
     print 'Backlog file name:', f_back_log.name
@@ -37,19 +39,29 @@ def get_real_prices():
     price_change.append(pChange)
     if config.write_back_log:
         f_back_log.write('%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status')))
-    result = process_data(price_change)
+    result = process_data(price_change, ask, bid)
     global last_result
+    global deal_price
     if result != 'hold':
+        diff = 0
+        if last_result == 'buy':
+                diff = pChange - deal_price
+        if last_result == 'sell':
+                diff = deal_price - pChange
+        if diff != 0:
+            deals.append(diff)
         last_result = result
+        deal_price = pChange
     print time, "s : ", result, ' spread size: ', ask - bid
 
-def process_data(price_change):
+def process_data(price_change, ask, bid):
     result = 'hold'
     global last_result
     plt.clf()
     times.append(time)
     hmin = 0
     hmax = 0
+    plt.subplot(2,1,1)
     if len(price_change) > 3:
         hmaxs = list()
         for i in range(1, len(price_change) - 2):
@@ -57,14 +69,14 @@ def process_data(price_change):
                 hmaxs.append(price_change[i])
         if len(hmaxs) > 0:
             hmax = numpy.mean(hmaxs)
-            plt.plot([times[0],times[len(times)-1]], [hmax, hmax], label='MAX', color='red', linestyle=':')
+            plt.axhline(y=hmax, label='MAX', color='red', linestyle=':')
         hmins = list()
         for i in range(1, len(price_change) - 2):
             if price_change[i] < price_change[i-1] and price_change[i] < price_change[i+1]:
                 hmins.append(price_change[i])
         if len(hmins) > 0:
             hmin = numpy.mean(hmins)
-            plt.plot([times[0],times[len(times)-1]], [hmin, hmin], label='MIN', color='green', linestyle=':')
+            plt.axhline(y=hmin, label='MIN', color='green', linestyle=':')
     if hmin != 0 and hmax != 0:
         if price_change[len(price_change)-1] >= hmax:
             if last_result != 'sell':
@@ -75,12 +87,16 @@ def process_data(price_change):
         if price_change[len(price_change) - 1] > hmin and price_change[len(price_change)-1] < hmax:
             if last_result != 'close' and last_result!='hold':
                 result = 'close'
-
     plt.plot(times, price_change, label='Price change', color='blue',  marker='')
     plt.title(config.insName)
     plt.xlabel('Time, s')
-
     plt.legend(loc='upper left')
+
+    plt.subplot(2,1,2)
+    plt.hist(deals,color='blue')
+    plt.xlabel('Profits of price change')
+    plt.axvline(x = ask - bid, color='red')
+
     if len(asks) > config.maxLength:
         asks.pop(0)
     if len(bids) > config.maxLength:
@@ -90,6 +106,7 @@ def process_data(price_change):
     if len(times) > config.maxLength:
         times.pop(0)
 
+    plt.tight_layout()
     return result
 
 
