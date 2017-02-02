@@ -18,10 +18,13 @@ deals = list()
 deal_price = 0
 max_spread = 0
 min_spread = 1
+plusDeals = 0
+minusDeals = 0
+meanDeals = 0
 
 if config.write_back_log:
     print 'Backlog file name:', f_back_log.name
-    f_back_log.write('DateTime,Instrument,ASK,BID,Price change,Status \n')
+    f_back_log.write('DateTime,Instrument,ASK,BID,Price change,Status, Spread, Result \n')
 
 def get_real_prices():
     response = oanda.get_prices(instruments=config.insName)
@@ -39,11 +42,12 @@ def get_real_prices():
         lastPrice = (asks[len(asks)-2] + bids[len(bids)-2]) / 2
     pChange = (ask+bid)/2 - lastPrice
     price_change.append(pChange)
-    if config.write_back_log:
-        f_back_log.write('%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status')))
     result = process_data(price_change, ask, bid)
     global last_result
     global deal_price
+    global plusDeals
+    global minusDeals
+    global meanDeals
     if result != 'hold':
         diff = 0
         if last_result == 'buy':
@@ -52,8 +56,16 @@ def get_real_prices():
                 diff = deal_price - pChange
         if diff != 0:
             deals.append(diff)
+            if diff >= max_spread:
+                plusDeals = plusDeals + 1
+            if diff <= min_spread:
+                minusDeals = minusDeals + 1
+            if diff > min_spread and diff < max_spread :
+                meanDeals = meanDeals + 1
         last_result = result
         deal_price = pChange
+    if config.write_back_log:
+        f_back_log.write('%s,%s,%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status'), ask-bid, result))
     print time, "s : ", result, ' spread size: ', ask - bid
 
 def process_data(price_change, ask, bid):
@@ -96,18 +108,30 @@ def process_data(price_change, ask, bid):
     plt.xlabel('Time, s')
     plt.legend(loc='upper left')
 
-    plt.subplot(2,1,2)
+    plt.subplot(2,2,3)
     plt.hist(deals,color='blue')
-    plt.xlabel('Profits of price change')
     spread = ask - bid
     if max_spread < spread :
         max_spread = spread
     if min_spread > spread:
         min_spread = spread
-    plt.axvline(x = spread, color='red', label='SPREAD')
+    plt.axvline(x = spread, color='red')
     plt.axvline(x = max_spread, color='gray', linestyle=":")
     plt.axvline(x = min_spread, color='gray', linestyle=":")
+    plt.ylabel('Count of deals')
     plt.legend(loc='upper left')
+    plt.xticks([])
+
+    plt.subplot(2, 2, 4)
+    plt.legend(loc='upper left')
+    totalDeals = minusDeals + meanDeals + plusDeals
+    if totalDeals!=0:
+        plt.bar(0, 100 * float(minusDeals)/float(totalDeals), color='red')
+        plt.bar(1, 100 * float(meanDeals)/float(totalDeals), color='blue')
+        plt.bar(2, 100 * float(plusDeals)/float(totalDeals), color='green')
+    plt.xticks([0.5,1.5,2.5], ['Minus', 'Mean', 'Plus'])
+    plt.ylabel('% of deals')
+    plt.margins(0.1)
 
     if len(asks) > config.maxLength:
         asks.pop(0)
