@@ -1,13 +1,15 @@
-import oandapy
+import oandapyV20
+from oandapyV20.endpoints.pricing import PricingInfo
 import matplotlib.pyplot as plt
 from Config import Config
 from os import path
 import datetime
 import numpy
-import time as t
 
 config = Config()
-oanda = oandapy.API(environment="practice", access_token = config.token)
+oanda = oandapyV20.API(environment="practice", access_token = config.token)
+pReq = PricingInfo(config.account_id, "instruments="+config.insName)
+
 asks = list()
 bids = list()
 price_change = list()
@@ -35,7 +37,7 @@ def process_data(ask, bid, status):
     global meanDeals
     global max_spread
     global min_spread
-    if status == 'halted':
+    if status != 'tradeable':
         print config.insName, 'is halted.'
         return
     asks.append(ask)
@@ -132,18 +134,19 @@ def process_data(ask, bid, status):
         last_result = result
         deal_price = pChange
     if config.write_back_log:
-        f_back_log.write('%s,%s,%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status'), ask-bid, result))
+        f_back_log.write('%s,%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, pReq.response.get('prices')[0].get('asks')[1].get('price'), pReq.response.get('prices')[0].get('bids')[1].get('price'), pChange, ask-bid, result))
     print time, "s : ", result, ' spread size: ', ask - bid
 
 plt.ion()
 plt.grid(True)
 
 while True:
-    response = oanda.get_prices(instruments=config.insName)
-    prices = response.get('prices')
-    ask = prices[0].get('ask')
-    bid = prices[0].get('bid')
-    status = prices[0].get('status')
+    oanda.request(pReq)
+    # max ask
+    ask = float(pReq.response.get('prices')[0].get('asks')[1].get('price'))
+    # min bid
+    bid = float(pReq.response.get('prices')[0].get('bids')[1].get('price'))
+    status = pReq.response.get('prices')[0].get('status')
     process_data(ask, bid, status)
     plt.pause(config.period)
     time = time + config.period

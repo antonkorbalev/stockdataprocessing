@@ -5,7 +5,9 @@ from datetime import date
 import unittest
 import pandas
 import numpy
-import oandapy
+import oandapyV20
+from oandapyV20.endpoints.accounts import AccountList
+from oandapyV20.endpoints.pricing import PricingInfo
 
 
 class DownloaderTests(unittest.TestCase):
@@ -30,9 +32,17 @@ class DownloaderTests(unittest.TestCase):
 
     def test_accounts(self):
         token = open('../Token.txt', 'r').read()
-        oanda = oandapy.API(environment="practice", access_token=token)
-        accs = oanda.get_accounts().get('accounts')
-        self.assertTrue(len(accs) > 0)
+        accId = open('../Account.txt', 'r').read()
+        oanda = oandapyV20.API(environment="practice", access_token=token)
+        r = AccountList()
+        oanda.request(r)
+        accsInfo = r.response.get('accounts')
+        self.assertTrue(len(accsInfo) > 0)
+        p = PricingInfo(accId, "instruments=EUR_USD")
+        oanda.request(p)
+        print p.response
+        self.assertTrue(len(p.response.get('prices')) > 0)
+
 
 if __name__ == '__main__':
     unittest.main()
