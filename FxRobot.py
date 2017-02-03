@@ -4,6 +4,7 @@ from Config import Config
 from os import path
 import datetime
 import numpy
+import time as t
 
 config = Config()
 oanda = oandapy.API(environment="practice", access_token = config.token)
@@ -26,12 +27,14 @@ if config.write_back_log:
     print 'Backlog file name:', f_back_log.name
     f_back_log.write('DateTime,Instrument,ASK,BID,Price change,Status, Spread, Result \n')
 
-def get_real_prices():
-    response = oanda.get_prices(instruments=config.insName)
-    prices = response.get('prices')
-    ask = prices[0].get('ask')
-    bid = prices[0].get('bid')
-    status = prices[0].get('status')
+def process_data(ask, bid, status):
+    global last_result
+    global deal_price
+    global plusDeals
+    global minusDeals
+    global meanDeals
+    global max_spread
+    global min_spread
     if status == 'halted':
         print config.insName, 'is halted.'
         return
@@ -42,37 +45,7 @@ def get_real_prices():
         lastPrice = (asks[len(asks)-2] + bids[len(bids)-2]) / 2
     pChange = (ask+bid)/2 - lastPrice
     price_change.append(pChange)
-    result = process_data(price_change, ask, bid)
-    global last_result
-    global deal_price
-    global plusDeals
-    global minusDeals
-    global meanDeals
-    if result != 'hold':
-        diff = 0
-        if last_result == 'buy':
-                diff = pChange - deal_price
-        if last_result == 'sell':
-                diff = deal_price - pChange
-        if diff != 0:
-            deals.append(diff)
-            if diff >= max_spread:
-                plusDeals = plusDeals + 1
-            if diff <= min_spread:
-                minusDeals = minusDeals + 1
-            if diff > min_spread and diff < max_spread :
-                meanDeals = meanDeals + 1
-        last_result = result
-        deal_price = pChange
-    if config.write_back_log:
-        f_back_log.write('%s,%s,%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status'), ask-bid, result))
-    print time, "s : ", result, ' spread size: ', ask - bid
-
-def process_data(price_change, ask, bid):
     result = 'hold'
-    global last_result
-    global  max_spread
-    global  min_spread
     plt.clf()
     times.append(time)
     hmin = 0
@@ -119,11 +92,9 @@ def process_data(price_change, ask, bid):
     plt.axvline(x = max_spread, color='gray', linestyle=":")
     plt.axvline(x = min_spread, color='gray', linestyle=":")
     plt.ylabel('Count of deals')
-    plt.legend(loc='upper left')
     plt.xticks([])
 
     plt.subplot(2, 2, 4)
-    plt.legend(loc='upper left')
     totalDeals = minusDeals + meanDeals + plusDeals
     if totalDeals!=0:
         plt.bar(0, 100 * float(minusDeals)/float(totalDeals), color='red')
@@ -143,14 +114,37 @@ def process_data(price_change, ask, bid):
         times.pop(0)
 
     plt.tight_layout()
-    return result
 
+    if result != 'hold':
+        diff = 0
+        if last_result == 'buy':
+                diff = pChange - deal_price
+        if last_result == 'sell':
+                diff = deal_price - pChange
+        if diff != 0:
+            deals.append(diff)
+            if diff >= max_spread:
+                plusDeals = plusDeals + 1
+            if diff <= min_spread:
+                minusDeals = minusDeals + 1
+            if diff > min_spread and diff < max_spread :
+                meanDeals = meanDeals + 1
+        last_result = result
+        deal_price = pChange
+    if config.write_back_log:
+        f_back_log.write('%s,%s,%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, prices[0].get('ask'), prices[0].get('bid'), pChange, prices[0].get('status'), ask-bid, result))
+    print time, "s : ", result, ' spread size: ', ask - bid
 
 plt.ion()
 plt.grid(True)
 
 while True:
-    get_real_prices()
+    response = oanda.get_prices(instruments=config.insName)
+    prices = response.get('prices')
+    ask = prices[0].get('ask')
+    bid = prices[0].get('bid')
+    status = prices[0].get('status')
+    process_data(ask, bid, status)
     plt.pause(config.period)
     time = time + config.period
 
