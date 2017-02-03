@@ -204,6 +204,7 @@ while True:
             print 'Success percent:', success, '%'
             if success < config.percent_of_success:
                 print 'No success. Skip step. Take stats.'
+                do_close()
             else:
                 if result == 'buy':
                     do_long(ask)
