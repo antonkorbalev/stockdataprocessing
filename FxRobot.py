@@ -107,7 +107,7 @@ def process_data(ask, bid, status):
         plt.bar(0, 100 * float(minusDeals)/float(totalDeals), color='red')
         plt.bar(1, 100 * float(meanDeals)/float(totalDeals), color='blue')
         plt.bar(2, 100 * float(plusDeals)/float(totalDeals), color='green')
-    plt.xticks([0.5,1.5,2.5], ['Minus', 'Mean', 'Plus'])
+    plt.xticks([0,1,2], ['Minus', 'Mean', 'Plus'])
     plt.ylabel('% of deals')
     plt.margins(0.1)
 
@@ -144,19 +144,27 @@ def process_data(ask, bid, status):
     return result
 
 def do_long(ask):
-    mktOrder = MarketOrderRequest(instrument=config.insName,
-                                  units=config.lot_size,
-                                  takeProfitOnFill=TakeProfitDetails(price=ask+config.take_profit_value).data,
-                                  stopLossOnFill=StopLossDetails(price=ask-config.stop_loss_value).data)
+    if config.take_profit_value!=0 or config.stop_loss_value!=0:
+        mktOrder = MarketOrderRequest(instrument=config.insName,
+                                      units=config.lot_size,
+                                      takeProfitOnFill=TakeProfitDetails(price=ask+config.take_profit_value).data,
+                                      stopLossOnFill=StopLossDetails(price=ask-config.stop_loss_value).data)
+    else:
+        mktOrder = MarketOrderRequest(instrument=config.insName,
+                                      units=config.lot_size)
     r = orders.OrderCreate(config.account_id, data=mktOrder.data)
     oanda.request(r)
     print r.response
 
 def do_short(bid):
-    mktOrder = MarketOrderRequest(instrument=config.insName,
-                                  units=-config.lot_size,
-                                  takeProfitOnFill=TakeProfitDetails(price=bid-config.take_profit_value).data,
-                                  stopLossOnFill=StopLossDetails(price=bid+config.stop_loss_value).data)
+    if config.take_profit_value!=0 or config.stop_loss_value!=0:
+        mktOrder = MarketOrderRequest(instrument=config.insName,
+                                      units=-config.lot_size,
+                                      takeProfitOnFill=TakeProfitDetails(price=ask+config.take_profit_value).data,
+                                      stopLossOnFill=StopLossDetails(price=ask-config.stop_loss_value).data)
+    else:
+        mktOrder = MarketOrderRequest(instrument=config.insName,
+                                      units=config.lot_size)
     r = orders.OrderCreate(config.account_id, data=mktOrder.data)
     oanda.request(r)
     print r.response
@@ -165,11 +173,13 @@ def do_close():
     try:
         r = positions.PositionClose(config.account_id, 'EUR_USD', {"longUnits": "ALL"})
         resp = oanda.request(r)
+        print resp
     except:
         print "No long units to close"
     try:
         r = positions.PositionClose(config.account_id, 'EUR_USD', {"shortUnits": "ALL"})
         resp = oanda.request(r)
+        print resp
     except:
         print "No short units to close"
 
@@ -189,13 +199,19 @@ while True:
         bid = float(pReq.response.get('prices')[0].get('bids')[1].get('price'))
         status = pReq.response.get('prices')[0].get('status')
         result = process_data(ask, bid, status)
-        if result == 'buy':
-            do_long(ask)
-        if result == 'sell':
-            do_short(bid)
-        if result == 'close':
-            do_close()
-        print "Current balance:", get_bal()
+        if plusDeals != 0 or minusDeals != 0:
+            success = 100 * float(plusDeals)/float(meanDeals+plusDeals+minusDeals)
+            print 'Success percent:', success, '%'
+            if success < config.percent_of_success:
+                print 'No success. Skip step. Take stats.'
+            else:
+                if result == 'buy':
+                    do_long(ask)
+                if result == 'sell':
+                    do_short(bid)
+                if result == 'close':
+                    do_close()
+        print 'Current balance:', get_bal()
 
     except Exception as e:
         print e
