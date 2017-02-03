@@ -1,5 +1,10 @@
 import oandapyV20
 from oandapyV20.endpoints.pricing import PricingInfo
+from oandapyV20.contrib.requests import MarketOrderRequest
+import oandapyV20.endpoints.orders as orders
+from oandapyV20.contrib.requests import TakeProfitDetails, StopLossDetails
+from oandapyV20.endpoints.accounts import AccountDetails
+import oandapyV20.endpoints.positions as positions
 import matplotlib.pyplot as plt
 from Config import Config
 from os import path
@@ -136,18 +141,64 @@ def process_data(ask, bid, status):
     if config.write_back_log:
         f_back_log.write('%s,%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, pReq.response.get('prices')[0].get('asks')[1].get('price'), pReq.response.get('prices')[0].get('bids')[1].get('price'), pChange, ask-bid, result))
     print time, "s : ", result, ' spread size: ', ask - bid
+    return result
+
+def do_long(ask):
+    mktOrder = MarketOrderRequest(instrument=config.insName,
+                                  units=config.lot_size,
+                                  takeProfitOnFill=TakeProfitDetails(price=ask+config.take_profit_value).data,
+                                  stopLossOnFill=StopLossDetails(price=ask-config.stop_loss_value).data)
+    r = orders.OrderCreate(config.account_id, data=mktOrder.data)
+    oanda.request(r)
+    print r.response
+
+def do_short(bid):
+    mktOrder = MarketOrderRequest(instrument=config.insName,
+                                  units=-config.lot_size,
+                                  takeProfitOnFill=TakeProfitDetails(price=bid-config.take_profit_value).data,
+                                  stopLossOnFill=StopLossDetails(price=bid+config.stop_loss_value).data)
+    r = orders.OrderCreate(config.account_id, data=mktOrder.data)
+    oanda.request(r)
+    print r.response
+
+def do_close():
+    try:
+        r = positions.PositionClose(config.account_id, 'EUR_USD', {"longUnits": "ALL"})
+        resp = oanda.request(r)
+    except:
+        print "No long units to close"
+    try:
+        r = positions.PositionClose(config.account_id, 'EUR_USD', {"shortUnits": "ALL"})
+        resp = oanda.request(r)
+    except:
+        print "No short units to close"
+
+def get_bal():
+    r = AccountDetails(config.account_id)
+    return oanda.request(r).get('account').get('balance')
 
 plt.ion()
 plt.grid(True)
 
 while True:
-    oanda.request(pReq)
-    # max ask
-    ask = float(pReq.response.get('prices')[0].get('asks')[1].get('price'))
-    # min bid
-    bid = float(pReq.response.get('prices')[0].get('bids')[1].get('price'))
-    status = pReq.response.get('prices')[0].get('status')
-    process_data(ask, bid, status)
+    try:
+        oanda.request(pReq)
+        # max ask
+        ask = float(pReq.response.get('prices')[0].get('asks')[1].get('price'))
+        # min bid
+        bid = float(pReq.response.get('prices')[0].get('bids')[1].get('price'))
+        status = pReq.response.get('prices')[0].get('status')
+        result = process_data(ask, bid, status)
+        if result == 'buy':
+            do_long(ask)
+        if result == 'sell':
+            do_short(bid)
+        if result == 'close':
+            do_close()
+        print "Current balance:", get_bal()
+
+    except Exception as e:
+        print e
     plt.pause(config.period)
     time = time + config.period
 

@@ -6,11 +6,13 @@ import unittest
 import pandas
 import numpy
 import oandapyV20
-from oandapyV20.endpoints.accounts import AccountList
+from oandapyV20.endpoints.accounts import AccountList, AccountDetails
 from oandapyV20.endpoints.pricing import PricingInfo
+from oandapyV20.contrib.requests import MarketOrderRequest
+import oandapyV20.endpoints.orders as orders
+import oandapyV20.endpoints.positions as positions
 
-
-class DownloaderTests(unittest.TestCase):
+class GeneralTests(unittest.TestCase):
     """Test methods for StockDataDownloader"""
 
     def test_downloader(self):
@@ -43,6 +45,20 @@ class DownloaderTests(unittest.TestCase):
         print p.response
         self.assertTrue(len(p.response.get('prices')) > 0)
 
-
+    # for demo accounts only!
+    def test_market_orders(self):
+        token = open('../Token.txt', 'r').read()
+        accId = open('../Account.txt', 'r').read()
+        oanda = oandapyV20.API(environment="practice", access_token=token)
+        mktOrder = MarketOrderRequest(instrument='EUR_USD',units=1)
+        r = orders.OrderCreate(accId, data=mktOrder.data)
+        resp = oanda.request(r)
+        print resp
+        r = positions.PositionClose(accId, 'EUR_USD',{"longUnits": "ALL"})
+        resp = oanda.request(r)
+        print resp
+        r = AccountDetails(accId)
+        balance = oanda.request(r).get('account').get('balance')
+        self.assertTrue(balance > 0)
 if __name__ == '__main__':
     unittest.main()
