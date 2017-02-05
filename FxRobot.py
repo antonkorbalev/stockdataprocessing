@@ -12,13 +12,14 @@ import datetime
 import numpy
 
 config = Config()
-oanda = oandapyV20.API(environment="practice", access_token = config.token)
-pReq = PricingInfo(config.account_id, "instruments="+config.insName)
+oanda = oandapyV20.API(environment='practice', access_token = config.token)
+pReq = PricingInfo(config.account_id, 'instruments='+config.insName)
 
 asks = list()
 bids = list()
 price_change = list()
-f_back_log = open(path.relpath(config.back_log_path + '/' + config.insName + '_' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))+'.log', 'a');
+if config.write_back_log:
+    f_back_log = open(path.relpath(config.back_log_path + '/' + config.insName + '_' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))+'.log', 'a');
 time = 0
 times = list()
 last_result = 'hold'
@@ -175,13 +176,13 @@ def do_close():
         resp = oanda.request(r)
         print resp
     except:
-        print "No long units to close"
+        print 'No long units to close'
     try:
         r = positions.PositionClose(config.account_id, 'EUR_USD', {"shortUnits": "ALL"})
         resp = oanda.request(r)
         print resp
     except:
-        print "No short units to close"
+        print 'No short units to close'
 
 def get_bal():
     r = AccountDetails(config.account_id)
