@@ -161,8 +161,8 @@ def do_long(ask):
         mktOrder = MarketOrderRequest(instrument=config.insName,
                                       units=config.lot_size)
     r = orders.OrderCreate(config.account_id, data=mktOrder.data)
-    oanda.request(r)
-    print r.response
+    resp = oanda.request(r)
+    print "BUY price =", resp.get('orderFillTransaction').get('price')
 
 def do_short(bid):
     if config.take_profit_value!=0 or config.stop_loss_value!=0:
@@ -174,24 +174,24 @@ def do_short(bid):
         mktOrder = MarketOrderRequest(instrument=config.insName,
                                       units=-config.lot_size)
     r = orders.OrderCreate(config.account_id, data=mktOrder.data)
-    oanda.request(r)
-    print r.response
+    resp = oanda.request(r)
+    print "SELL price =", resp.get('orderFillTransaction').get('price')
 
 def do_close():
     try:
         r = positions.PositionClose(config.account_id, 'EUR_USD', {"longUnits": "ALL"})
         resp = oanda.request(r)
-        print resp
         pl = resp.get('longOrderFillTransaction').get('pl')
         real_profits.append(float(pl))
+        print "Closed. Profit = ", pl, " price = ", resp.get('longOrderFillTransaction').get('price')
     except:
         print 'No long units to close'
     try:
         r = positions.PositionClose(config.account_id, 'EUR_USD', {"shortUnits": "ALL"})
         resp = oanda.request(r)
-        print resp
         pl = resp.get('shortOrderFillTransaction').get('tradesClosed')[0].get('realizedPL')
         real_profits.append(float(pl))
+        print "Closed. Profit = ", pl, " price = ", resp.get('shortOrderFillTransaction').get('price')
     except:
         print 'No short units to close'
 
