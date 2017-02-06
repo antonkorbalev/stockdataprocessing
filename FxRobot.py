@@ -165,7 +165,7 @@ def do_short(bid):
                                       stopLossOnFill=StopLossDetails(price=ask-config.stop_loss_value).data)
     else:
         mktOrder = MarketOrderRequest(instrument=config.insName,
-                                      units=config.lot_size)
+                                      units=-config.lot_size)
     r = orders.OrderCreate(config.account_id, data=mktOrder.data)
     oanda.request(r)
     print r.response
@@ -208,8 +208,10 @@ while True:
                 do_close()
             else:
                 if result == 'buy':
+                    do_close()
                     do_long(ask)
                 if result == 'sell':
+                    do_close()
                     do_short(bid)
                 if result == 'close':
                     do_close()
