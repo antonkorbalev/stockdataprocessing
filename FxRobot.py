@@ -24,6 +24,7 @@ time = 0
 times = list()
 last_result = 'hold'
 deals = list()
+real_profits = list()
 deal_price = 0
 max_spread = 0
 min_spread = 1
@@ -58,7 +59,7 @@ def process_data(ask, bid, status):
     times.append(time)
     hmin = 0
     hmax = 0
-    plt.subplot(2,1,1)
+    plt.subplot(2,2,1)
     if len(price_change) > 3:
         hmaxs = list()
         for i in range(1, len(price_change) - 2):
@@ -89,7 +90,7 @@ def process_data(ask, bid, status):
     plt.xlabel('Time, s')
     plt.legend(loc='upper left')
 
-    plt.subplot(2,2,3)
+    plt.subplot(2,2,2)
     plt.hist(deals,color='blue')
     spread = ask - bid
     if max_spread < spread :
@@ -102,7 +103,7 @@ def process_data(ask, bid, status):
     plt.ylabel('Count of deals')
     plt.xticks([])
 
-    plt.subplot(2, 2, 4)
+    plt.subplot(2, 2, 3)
     totalDeals = minusDeals + meanDeals + plusDeals
     if totalDeals!=0:
         plt.bar(0, 100 * float(minusDeals)/float(totalDeals), color='red')
@@ -111,6 +112,12 @@ def process_data(ask, bid, status):
     plt.xticks([0,1,2], ['Minus', 'Mean', 'Plus'])
     plt.ylabel('% of deals')
     plt.margins(0.1)
+
+    plt.subplot(2, 2, 4)
+    plt.hist(real_profits,color='blue')
+    plt.axvline(x = 0, color='red')
+    plt.ylabel('Real deals count')
+    plt.xlabel("Profit")
 
     if len(asks) > config.maxLength:
         asks.pop(0)
@@ -175,12 +182,16 @@ def do_close():
         r = positions.PositionClose(config.account_id, 'EUR_USD', {"longUnits": "ALL"})
         resp = oanda.request(r)
         print resp
+        pl = resp.get('longOrderFillTransaction').get('pl')
+        real_profits.append(float(pl))
     except:
         print 'No long units to close'
     try:
         r = positions.PositionClose(config.account_id, 'EUR_USD', {"shortUnits": "ALL"})
         resp = oanda.request(r)
         print resp
+        pl = resp.get('shortOrderFillTransaction').get('tradesClosed')[0].get('realizedPL')
+        real_profits.append(float(pl))
     except:
         print 'No short units to close'
 
@@ -200,21 +211,14 @@ while True:
         bid = float(pReq.response.get('prices')[0].get('bids')[1].get('price'))
         status = pReq.response.get('prices')[0].get('status')
         result = process_data(ask, bid, status)
-        if plusDeals != 0 or minusDeals != 0:
-            success = 100 * float(plusDeals)/float(meanDeals+plusDeals+minusDeals)
-            print 'Success percent:', success, '%'
-            if success < config.percent_of_success:
-                print 'No success. Skip step. Take stats.'
-                do_close()
-            else:
-                if result == 'buy':
-                    do_close()
-                    do_long(ask)
-                if result == 'sell':
-                    do_close()
-                    do_short(bid)
-                if result == 'close':
-                    do_close()
+        if result == 'buy':
+            do_close()
+            do_long(ask)
+        if result == 'sell':
+            do_close()
+            do_short(bid)
+        if result == 'close':
+            do_close()
         print 'Current balance:', get_bal()
 
     except Exception as e:
