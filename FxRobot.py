@@ -50,7 +50,7 @@ def process_data(ask, bid, status):
     meanBid = numpy.mean(bids)
 
     if last_ask == 0:
-        if ask < meanAsk and last_bid == 0:
+        if ask < meanBid and last_bid == 0:
             last_ask = do_long(ask)
             long_time = datetime.now()
     else:
@@ -59,7 +59,7 @@ def process_data(ask, bid, status):
             last_ask = 0
 
     if last_bid == 0:
-        if bid > meanBid and last_ask ==0:
+        if bid > meanAsk and last_ask ==0:
             last_bid = do_short(bid)
             short_time = datetime.now()
     else:
@@ -90,7 +90,7 @@ def do_long(ask):
     resp = oanda.request(r)
     print resp
     price = resp.get('orderFillTransaction').get('price')
-    print 'BUY price =', price
+    print time, 's: BUY price =', price
     return float(price)
 
 def do_short(bid):
@@ -106,7 +106,7 @@ def do_short(bid):
     resp = oanda.request(r)
     print resp
     price = resp.get('orderFillTransaction').get('price')
-    print 'SELL price =', price
+    print time, 's: SELL price =', price
     return float(price)
 
 def do_close_long():
@@ -116,7 +116,7 @@ def do_close_long():
         print resp
         pl = resp.get('longOrderFillTransaction').get('pl')
         real_profits.append(float(pl))
-        print "Closed. Profit = ", pl, " price = ", resp.get('longOrderFillTransaction').get('price')
+        print time, 's: Closed. Profit = ', pl, ' price = ', resp.get('longOrderFillTransaction').get('price')
     except:
         print 'No long units to close'
 
@@ -127,7 +127,7 @@ def do_close_short():
         print resp
         pl = resp.get('shortOrderFillTransaction').get('tradesClosed')[0].get('realizedPL')
         real_profits.append(float(pl))
-        print "Closed. Profit = ", pl, " price = ", resp.get('shortOrderFillTransaction').get('price')
+        print time, 's: Closed. Profit = ', pl, ' price = ', resp.get('shortOrderFillTransaction').get('price')
     except:
         print 'No short units to close'
 
