@@ -162,7 +162,7 @@ while True:
         plt.subplot(1, 2, 2)
         plt.hist(real_profits, label='Profits')
         plt.legend(loc='upper left')
-        plt.xlabel('Profits, s')
+        plt.xlabel('Profits')
         plt.ylabel('Counts')
         plt.tight_layout()
 
