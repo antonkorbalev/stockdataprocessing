@@ -5,6 +5,8 @@ import oandapyV20.endpoints.orders as orders
 from oandapyV20.contrib.requests import TakeProfitDetails, StopLossDetails
 from oandapyV20.endpoints.accounts import AccountDetails
 import oandapyV20.endpoints.positions as positions
+from scipy.interpolate import interp1d
+import statsmodels.api as sm
 import matplotlib.pyplot as plt
 from Config import Config
 from os import path
@@ -60,6 +62,12 @@ def process_data(ask, bid, status):
     hmin = 0
     hmax = 0
     plt.subplot(2,2,1)
+
+    lowess = sm.nonparametric.lowess(price_change, times, frac=.3)
+    lowess_x = list(zip(*lowess))[0]
+    lowess_y = list(zip(*lowess))[1]
+    y_last = lowess_y[len(lowess_y)-1]
+
     if len(price_change) > 3:
         hmaxs = list()
         for i in range(1, len(price_change) - 2):
@@ -75,20 +83,24 @@ def process_data(ask, bid, status):
         if len(hmins) > 0:
             hmin = numpy.mean(hmins)
             plt.axhline(y=hmin, label='MIN', color='green', linestyle=':')
+            print y_last, ' ', lowess_y[len(lowess_y)-1]
     if hmin != 0 and hmax != 0:
-        if price_change[len(price_change)-1] >= hmax:
+        if price_change[len(price_change)-1] >= hmax and y_last >= hmax:
             if last_result != 'sell':
                 result = 'sell'
-        if price_change[len(price_change)-1] <= hmin:
+        if price_change[len(price_change)-1] <= hmin and y_last <=hmax:
             if last_result != 'buy':
                 result = 'buy'
         if price_change[len(price_change) - 1] > hmin and price_change[len(price_change)-1] < hmax:
             if last_result != 'close' and last_result!='hold':
                 result = 'close'
-    plt.plot(times, price_change, label='Price change', color='blue',  marker='')
-    plt.title(config.insName)
+    plt.plot(times, price_change, label='Price change', color='blue', linestyle='', marker='o', markersize=3)
+    plt.plot(lowess_x, lowess_y, label='Price change', color='blue', marker='')
+    plt.plot(max(lowess_x), y_last, label='YMAX', color='red', marker='o')
+    #plt.title(config.insName)
     plt.xlabel('Time, s')
-    plt.legend(loc='upper left')
+    plt.ylabel('Price change')
+    #plt.legend(loc='upper left')
 
     plt.subplot(2,2,2)
     plt.hist(deals,color='blue')
@@ -148,7 +160,7 @@ def process_data(ask, bid, status):
         deal_price = pChange
     if config.write_back_log:
         f_back_log.write('%s,%s,%s,%s,%s,%s,%s \n' % (datetime.datetime.now(), config.insName, pReq.response.get('prices')[0].get('asks')[1].get('price'), pReq.response.get('prices')[0].get('bids')[1].get('price'), pChange, ask-bid, result))
-    print time, "s : ", result, ' spread size: ', ask - bid
+    print time, 's : ', result, ' spread size: ', ask - bid
     return result
 
 def do_long(ask):
@@ -162,7 +174,7 @@ def do_long(ask):
                                       units=config.lot_size)
     r = orders.OrderCreate(config.account_id, data=mktOrder.data)
     resp = oanda.request(r)
-    print "BUY price =", resp.get('orderFillTransaction').get('price')
+    print 'BUY price =', resp.get('orderFillTransaction').get('price')
 
 def do_short(bid):
     if config.take_profit_value!=0 or config.stop_loss_value!=0:
@@ -175,7 +187,7 @@ def do_short(bid):
                                       units=-config.lot_size)
     r = orders.OrderCreate(config.account_id, data=mktOrder.data)
     resp = oanda.request(r)
-    print "SELL price =", resp.get('orderFillTransaction').get('price')
+    print 'SELL price =', resp.get('orderFillTransaction').get('price')
 
 def do_close():
     try:
@@ -209,6 +221,7 @@ while True:
         ask = float(pReq.response.get('prices')[0].get('asks')[1].get('price'))
         # min bid
         bid = float(pReq.response.get('prices')[0].get('bids')[1].get('price'))
+        print 'Ask price = ', ask, ', bid price=', bid
         status = pReq.response.get('prices')[0].get('status')
         result = process_data(ask, bid, status)
         if result == 'buy':
