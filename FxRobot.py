@@ -44,28 +44,12 @@ def process_data(ask, bid, status):
     asks.append(ask)
     bids.append(bid)
     times.append(time)
-    if (len(times) < config.maxLength):
-        return
-    meanAsk = numpy.mean(asks)
-    meanBid = numpy.mean(bids)
 
-    if last_ask == 0:
-        if (ask < meanAsk or bid > meanAsk) and last_bid == 0:
-            last_ask = do_long(ask)
-            long_time = datetime.now()
-    else:
-        if bid > last_ask or (datetime.now() - long_time).total_seconds() > config.max_pos_time:
-            do_close_long()
-            last_ask = 0
+    # --- begin strategy here ---
 
-    if last_bid == 0:
-        if (bid > meanBid or ask < meanBid) and last_ask ==0:
-            last_bid = do_short(bid)
-            short_time = datetime.now()
-    else:
-        if ask < last_bid or (datetime.now() - short_time).total_seconds() > config.max_pos_time:
-            do_close_short()
-            last_bid = 0
+
+
+    # --- end strategy here ---
 
     if len(asks) > config.maxLength:
         asks.pop(0)

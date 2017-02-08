@@ -10,4 +10,3 @@ class Config:
         self.stop_loss_value = 0
         self.take_profit_value = 0
         self.lot_size = 10000
-        self.max_pos_time = 300 #s
