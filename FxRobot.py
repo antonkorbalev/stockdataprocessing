@@ -50,7 +50,7 @@ def process_data(ask, bid, status):
     meanBid = numpy.mean(bids)
 
     if last_ask == 0:
-        if ask < meanBid and last_bid == 0:
+        if (ask < meanAsk or bid > meanAsk) and last_bid == 0:
             last_ask = do_long(ask)
             long_time = datetime.now()
     else:
@@ -59,7 +59,7 @@ def process_data(ask, bid, status):
             last_ask = 0
 
     if last_bid == 0:
-        if bid > meanAsk and last_ask ==0:
+        if (bid > meanBid or ask < meanBid) and last_ask ==0:
             last_bid = do_short(bid)
             short_time = datetime.now()
     else:
