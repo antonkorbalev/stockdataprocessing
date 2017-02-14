@@ -1,19 +1,20 @@
+import datetime
+from datetime import datetime
+from os import path
+
+import matplotlib.pyplot as plt
 import oandapyV20
-from oandapyV20.endpoints.pricing import PricingInfo
-from oandapyV20.contrib.requests import MarketOrderRequest
 import oandapyV20.endpoints.orders as orders
+import oandapyV20.endpoints.positions as positions
+from oandapyV20.contrib.requests import MarketOrderRequest
 from oandapyV20.contrib.requests import TakeProfitDetails, StopLossDetails
 from oandapyV20.endpoints.accounts import AccountDetails
-import oandapyV20.endpoints.positions as positions
-from Config import Config
-from os import path
-import datetime
-import numpy
-import matplotlib.pyplot as plt
-from datetime import datetime
+from oandapyV20.endpoints.pricing import PricingInfo
+
+from Conf.Config import Config
 
 config = Config()
-oanda = oandapyV20.API(environment='practice', access_token = config.token)
+oanda = oandapyV20.API(environment=config.env, access_token = config.token)
 pReq = PricingInfo(config.account_id, 'instruments='+config.insName)
 
 asks = list()

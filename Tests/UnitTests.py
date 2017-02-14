@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from StockDataDownloader import StockDataDownloader
 from PatternsProcessor import PatternProcessor
-from datetime import date
+from datetime import date, datetime, timedelta
 import unittest
 import pandas
 import numpy
@@ -60,5 +60,17 @@ class GeneralTests(unittest.TestCase):
         r = AccountDetails(accId)
         balance = oanda.request(r).get('account').get('balance')
         self.assertTrue(balance > 0)
+
+    # do not forget UTC now!
+    def test_oanda_fx_history(self):
+        token = open('../Token.txt', 'r').read()
+        oanda = oandapyV20.API(environment="practice", access_token=token)
+        downloader = StockDataDownloader.StockDataDownloader()
+        dateFrom = datetime.utcnow() - timedelta(days=1)
+        dateTo = datetime.utcnow()
+        result = downloader.get_data_from_oanda_fx(oanda, 'EUR_USD','S5',
+                dateFrom, dateTo)
+        self.assertTrue(len(result) > 0)
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,7 @@
 class Config:
     def __init__(self):
         self.token = open('Token.txt', 'r').read()
+        self.env = 'practice'
         self.insName = 'EUR_USD'
         self.maxLength = 20 # ticks
         self.period = 1 # s
