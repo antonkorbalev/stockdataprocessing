@@ -4,4 +4,3 @@ class DbConfig:
         self.user = 'postgres'
         self.password='123456'
         self.dbname='traindb'
-        self.tablename='stockdata'
