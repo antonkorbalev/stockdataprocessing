@@ -35,9 +35,9 @@ connect.commit()
 
 print 'Created table', tName
 
-daysTotal = 10  # int(raw_input('Days to import: '))
+daysTotal = 30  # int(raw_input('Days to import: '))
 insName = 'EUR_USD'  # raw_input('Specify instrument name: ')
-timeFrame = 'S5'  # raw_input('Time frame: ')
+timeFrame = 'M5'  # raw_input('Time frame: ')
 
 downloader = StockDataDownloader.StockDataDownloader()
 oanda = oandapyV20.API(environment=conf.env, access_token=conf.token)
@@ -61,7 +61,7 @@ date = datetime.utcnow() - timedelta(days=daysTotal)
 dateStop = datetime.utcnow()
 
 last_id = ''
-while date < dateStop:
+while date < dateStop - timedelta(hours=step):
     dateFrom = date
     dateTo = date + timedelta(hours=step)
     data = downloader.get_data_from_oanda_fx(oanda, insName, timeFrame,
