@@ -30,7 +30,7 @@ def CheckDB_for_period(periodInSeconds):
         lastTimeStamp = timeStamp
     return error
 
-error = CheckDB_for_period(60*50)
+error = CheckDB_for_period(60*5)
 if not error:
     print "Database is OK."
 
