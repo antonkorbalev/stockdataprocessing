@@ -18,19 +18,15 @@ def CheckDB_for_period(periodInSeconds):
     error = False
     for row in cursor:
         timeStamp = row[0]
-        print timeStamp
         if lastTimeStamp!=datetime.min:
             delta = timeStamp - lastTimeStamp
             if delta != timedelta(seconds=periodInSeconds):
-                # if same day
-                if delta.days == 0:
-                    print 'Error: difference in time is ', delta
-                    error = True
-                    break
+                print 'Error: difference in time is ', delta
+                break
         lastTimeStamp = timeStamp
     return error
 
-error = CheckDB_for_period(60*5)
+error = CheckDB_for_period(5)
 if not error:
     print "Database is OK."
 

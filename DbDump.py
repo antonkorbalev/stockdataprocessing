@@ -3,9 +3,10 @@ from StockDataDownloader import StockDataDownloader
 from Conf import DbConfig, Config
 from datetime import datetime, timedelta
 import oandapyV20
+from dateutil import parser
 import re
 
-step = 6  # hrs
+step = 60*300  # secs
 dbConf = DbConfig.DbConfig()
 conf = Config.Config()
 connect = psycopg2.connect(database=dbConf.dbname, user=dbConf.user, host=dbConf.address, password=dbConf.password)
@@ -35,9 +36,8 @@ connect.commit()
 
 print 'Created table', tName
 
-daysTotal = 30  # int(raw_input('Days to import: '))
-insName = 'EUR_USD'  # raw_input('Specify instrument name: ')
-timeFrame = 'M5'  # raw_input('Time frame: ')
+daysTotal = 10
+timeStep = 5 # s
 
 downloader = StockDataDownloader.StockDataDownloader()
 oanda = oandapyV20.API(environment=conf.env, access_token=conf.token)
@@ -60,11 +60,11 @@ def parse_date(dt):
 date = datetime.utcnow() - timedelta(days=daysTotal)
 dateStop = datetime.utcnow()
 
-last_id = ''
-while date < dateStop - timedelta(hours=step):
+last_id = datetime.min
+while date < dateStop - timedelta(seconds=step):
     dateFrom = date
-    dateTo = date + timedelta(hours=step)
-    data = downloader.get_data_from_oanda_fx(oanda, insName, timeFrame,
+    dateTo = date + timedelta(seconds=step)
+    data = downloader.get_data_from_oanda_fx(oanda, conf.insName, 'S{0}'.format(timeStep),
                                              dateFrom, dateTo)
     if len(data.get('candles')) > 0:
         cmd = ''
@@ -72,12 +72,18 @@ while date < dateStop - timedelta(hours=step):
         cmd_bulk = ''
         for candle in data.get('candles'):
             id = parse_date(candle.get('time'))
-            if last_id != id:
-                cmd_bulk = cmd_bulk + ("(TIMESTAMP '{0}',{1},{2},{3}),\n"
-                                       .format(id, candle.get('ask')['c'], candle.get('bid')['c'],
-                                               candle.get('volume')))
-            else:
-                print 'Double id ', id, ' skipped.'
+            # add missing dates (when price does not change)
+            if last_id != datetime.min:
+                md = last_id + timedelta(seconds=timeStep)
+                while md <= id:
+                    if last_id != md:
+                        volume = candle.get('volume')
+                        if (md != id):
+                            volume = 0
+                        cmd_bulk = cmd_bulk + ("(TIMESTAMP '{0}',{1},{2},{3}),\n"
+                                           .format(md, candle.get('ask')['c'], candle.get('bid')['c'],
+                                                   volume))
+                    md = md + timedelta(seconds=timeStep)
             last_id = id
         cmd = cmd + cmd_bulk[:-2] + ';'
         cursor.execute(cmd)
