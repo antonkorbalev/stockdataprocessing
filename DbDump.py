@@ -6,7 +6,9 @@ import oandapyV20
 from dateutil import parser
 import re
 
-step = 60*300  # secs
+step = 60*300  # download step
+daysTotal = 10 # download period
+candleDiff = 5 # s
 dbConf = DbConfig.DbConfig()
 conf = Config.Config()
 connect = psycopg2.connect(database=dbConf.dbname, user=dbConf.user, host=dbConf.address, password=dbConf.password)
@@ -36,12 +38,8 @@ connect.commit()
 
 print 'Created table', tName
 
-daysTotal = 10
-timeStep = 5 # s
-
 downloader = StockDataDownloader.StockDataDownloader()
 oanda = oandapyV20.API(environment=conf.env, access_token=conf.token)
-
 
 def parse_date(dt):
     broken = re.search(
@@ -64,7 +62,7 @@ last_id = datetime.min
 while date < dateStop - timedelta(seconds=step):
     dateFrom = date
     dateTo = date + timedelta(seconds=step)
-    data = downloader.get_data_from_oanda_fx(oanda, conf.insName, 'S{0}'.format(timeStep),
+    data = downloader.get_data_from_oanda_fx(oanda, conf.insName, 'S{0}'.format(candleDiff),
                                              dateFrom, dateTo)
     if len(data.get('candles')) > 0:
         cmd = ''
@@ -74,7 +72,7 @@ while date < dateStop - timedelta(seconds=step):
             id = parse_date(candle.get('time'))
             # add missing dates (when price does not change)
             if last_id != datetime.min:
-                md = last_id + timedelta(seconds=timeStep)
+                md = last_id + timedelta(seconds=candleDiff)
                 while md <= id:
                     if last_id != md:
                         volume = candle.get('volume')
@@ -83,7 +81,7 @@ while date < dateStop - timedelta(seconds=step):
                         cmd_bulk = cmd_bulk + ("(TIMESTAMP '{0}',{1},{2},{3}),\n"
                                            .format(md, candle.get('ask')['c'], candle.get('bid')['c'],
                                                    volume))
-                    md = md + timedelta(seconds=timeStep)
+                    md = md + timedelta(seconds=candleDiff)
             last_id = id
         cmd = cmd + cmd_bulk[:-2] + ';'
         cursor.execute(cmd)
