@@ -3,11 +3,10 @@ from StockDataDownloader import StockDataDownloader
 from Conf import DbConfig, Config
 from datetime import datetime, timedelta
 import oandapyV20
-from dateutil import parser
 import re
 
-step = 60*300  # download step
-daysTotal = 10 # download period
+step = 60*360  # download step, s
+daysTotal = 1000 # download period, days
 candleDiff = 5 # s
 dbConf = DbConfig.DbConfig()
 conf = Config.Config()

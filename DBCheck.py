@@ -2,11 +2,12 @@ import psycopg2
 from Conf import DbConfig, Config
 from datetime import datetime, timedelta
 
-def CheckDB_for_period(periodInSeconds):
+def checkDB_for_period(periodInSeconds):
     conf = Config.Config()
     dbConf = DbConfig.DbConfig()
     connect = psycopg2.connect(database=dbConf.dbname, user=dbConf.user, host=dbConf.address, password=dbConf.password)
     cursor = connect.cursor()
+    cursor.itersize = 1000
 
     print 'Successfully connected'
     tName = conf.insName.lower()
@@ -24,9 +25,11 @@ def CheckDB_for_period(periodInSeconds):
                 print 'Error: difference in time is ', delta
                 break
         lastTimeStamp = timeStamp
+
+    connect.close()
     return error
 
-error = CheckDB_for_period(5)
+error = checkDB_for_period(5)
 if not error:
     print "Database is OK."
 
