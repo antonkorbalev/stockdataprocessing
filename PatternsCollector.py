@@ -4,7 +4,7 @@ from Desc.Candle import Candle
 from Desc.Pattern import Pattern
 import numpy
 
-def get_patterns_for_window_and_num(window, length):
+def get_patterns_for_window_and_num(window, length, limit=None):
     conf = Config.Config()
     dbConf = DbConfig.DbConfig()
     connect = psycopg2.connect(database=dbConf.dbname, user=dbConf.user, host=dbConf.address, password=dbConf.password)
@@ -16,14 +16,18 @@ def get_patterns_for_window_and_num(window, length):
     cursor.execute(cmd)
     totalCount = cursor.fetchone()[0]
     print 'Total items count {0}'.format(totalCount)
-    cmd = 'SELECT * FROM {0} ORDER BY datetimestamp;'.format(tName)
+    cmd = 'SELECT * FROM {0} ORDER BY datetimestamp'.format(tName)
+    if limit is None:
+        cmd = '{0};'.format(cmd)
+    else:
+        cmd = '{0} LIMIT {1};'.format(cmd, limit)
     cursor.execute(cmd)
 
     wl = list()
     patterns = list()
     profits = list()
     indicies = list()
-    i = 1;
+    i = 1
     for row in cursor:
         nextCandle = Candle(row[0], row[1], row[2], row[3])
         wl.append(nextCandle)
@@ -61,5 +65,20 @@ def get_patterns_for_window_and_num(window, length):
     print 'Mean index[after]: {0}'.format(numpy.mean(indicies))
     print 'Mean profit: {0}'.format(numpy.mean(profits))
     connect.close()
+    return patterns
 
-get_patterns_for_window_and_num(1, 10)
+
+def pattern_serie_to_vector(pattern):
+    vec = []
+    for candle in pattern.serie:
+        vec = numpy.hstack((vec, [candle.ask, candle.bid, candle.volume]))
+    return vec
+
+
+def get_x_y_for_patterns(patterns):
+    X = []
+    y = []
+    for p in patterns:
+        X.append(pattern_serie_to_vector(p))
+        y.append(p.result)
+    return X, y

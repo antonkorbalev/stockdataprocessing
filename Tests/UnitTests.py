@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from StockDataDownloader import StockDataDownloader
-from PatternsProcessor import PatternProcessor
+from PatternsCollector import Pattern, Candle, pattern_serie_to_vector, get_x_y_for_patterns
 from datetime import date, datetime, timedelta
 import unittest
 import pandas
@@ -21,20 +21,9 @@ class GeneralTests(unittest.TestCase):
         self.assertTrue(data.__len__() == 910, 'Invalid number of rows!')
         self.assertTrue(data.shape[1] == 7, 'Invalid number of columns!')
 
-    def test_patterns(self):
-        proc = PatternProcessor()
-        downloader = StockDataDownloader.StockDataDownloader()
-        data = downloader.get_data_from_finam('SPFB.SI-9.16', 5, 17, 420658, date(2016, 6, 13), date(2016, 9, 12))
-        (rows, classes) = proc.get_patterns(data,5, range(2,6),3)
-        self.assertTrue(rows.__len__() == classes.__len__())
-        data = pandas.DataFrame([[0,0,1,2,3,4,0],[0,0,5,6,7,8,0], [0,0,9,10,11,12,0], [0,0,1,2,3,4,0],[0,0,5,6,7,8,0], [0,0,9,10,11,12,0]])
-        (rows, classes) = proc.get_patterns(data,2,range(2,6),3)
-        self.assertTrue(classes == ['Buy', 'Sell'])
-        self.assertTrue(numpy.allclose(rows,[[1, 2, 3, 4, 5, 6, 7, 8], [5, 6, 7, 8, 9, 10, 11, 12]]))
-
     def test_accounts(self):
-        token = open('../Token.txt', 'r').read()
-        accId = open('../Account.txt', 'r').read()
+        token = open('../Account/Token.txt', 'r').read()
+        accId = open('../Account/Account.txt', 'r').read()
         oanda = oandapyV20.API(environment="practice", access_token=token)
         r = AccountList()
         oanda.request(r)
@@ -47,8 +36,8 @@ class GeneralTests(unittest.TestCase):
 
     # for demo accounts only!
     def test_market_orders(self):
-        token = open('../Token.txt', 'r').read()
-        accId = open('../Account.txt', 'r').read()
+        token = open('../Account/Token.txt', 'r').read()
+        accId = open('../Account/Account.txt', 'r').read()
         oanda = oandapyV20.API(environment="practice", access_token=token)
         mktOrder = MarketOrderRequest(instrument='EUR_USD',units=1)
         r = orders.OrderCreate(accId, data=mktOrder.data)
@@ -63,7 +52,7 @@ class GeneralTests(unittest.TestCase):
 
     # do not forget UTC now!
     def test_oanda_fx_history(self):
-        token = open('../Token.txt', 'r').read()
+        token = open('../Account/Token.txt', 'r').read()
         oanda = oandapyV20.API(environment="practice", access_token=token)
         downloader = StockDataDownloader.StockDataDownloader()
         dateFrom = datetime.utcnow() - timedelta(days=1)
@@ -71,6 +60,24 @@ class GeneralTests(unittest.TestCase):
         result = downloader.get_data_from_oanda_fx(oanda, 'EUR_USD','S5',
                 dateFrom, dateTo)
         self.assertTrue(len(result) > 0)
+
+    def test_pattern_serie_to_vector(self):
+        c1 = Candle(datetime.now(),1,2,3)
+        c2 = Candle(datetime.now(), 4, 5, 6)
+        p = Pattern([c1,c2],'test')
+        self.assertTrue(numpy.allclose(pattern_serie_to_vector(p), [1,2,3,4,5,6]))
+
+    def test_get_x_y_for_patterns(self):
+        c1 = Candle(datetime.now(), 1, 2, 3)
+        c2 = Candle(datetime.now(), 4, 5, 6)
+        p = Pattern([c1,c2],'test1')
+        c3 = Candle(datetime.now(), 7, 8, 9)
+        c4 = Candle(datetime.now(), 10, 11, 12)
+        p1 = Pattern([c3,c4],'test2')
+        X, y = get_x_y_for_patterns([p, p1])
+        self.assertEqual(y, ['test1','test2'])
+        self.assertTrue(numpy.allclose(X[0], [1, 2, 3, 4, 5, 6]))
+        self.assertTrue(numpy.allclose(X[1], [7, 8, 9, 10, 11, 12]))
 
 if __name__ == '__main__':
     unittest.main()
