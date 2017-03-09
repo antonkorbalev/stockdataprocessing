@@ -1,5 +1,11 @@
+import os
+import os.path
+
 class Config:
     def __init__(self):
+        if not os.path.isdir('Account'):
+            os.chdir('..')
+
         self.token = open('Account/Token.txt', 'r').read()
         self.env = 'practice'
         self.insName = 'EUR_USD'

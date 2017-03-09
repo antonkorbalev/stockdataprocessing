@@ -74,8 +74,8 @@ class GeneralTests(unittest.TestCase):
         c3 = Candle(datetime.now(), 7, 8, 9)
         c4 = Candle(datetime.now(), 10, 11, 12)
         p1 = Pattern([c3,c4],'test2')
-        X, y = get_x_y_for_patterns([p, p1])
-        self.assertEqual(y, ['test1','test2'])
+        X, y = get_x_y_for_patterns([p, p1],'test2')
+        self.assertEqual(y, [0,1])
         self.assertTrue(numpy.allclose(X[0], [1, 2, 3, 4, 5, 6]))
         self.assertTrue(numpy.allclose(X[1], [7, 8, 9, 10, 11, 12]))
 

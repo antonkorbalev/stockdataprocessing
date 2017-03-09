@@ -10,8 +10,8 @@ from oandapyV20.contrib.requests import MarketOrderRequest
 from oandapyV20.contrib.requests import TakeProfitDetails, StopLossDetails
 from oandapyV20.endpoints.accounts import AccountDetails
 from oandapyV20.endpoints.pricing import PricingInfo
-
 from Conf.Config import Config
+import seaborn
 
 config = Config()
 oanda = oandapyV20.API(environment=config.env, access_token = config.token)

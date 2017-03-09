@@ -71,14 +71,17 @@ def get_patterns_for_window_and_num(window, length, limit=None):
 def pattern_serie_to_vector(pattern):
     vec = []
     for candle in pattern.serie:
-        vec = numpy.hstack((vec, [candle.ask, candle.bid, candle.volume]))
+        vec = numpy.hstack((vec, [candle.ask, candle.bid]))
     return vec
 
 
-def get_x_y_for_patterns(patterns):
+def get_x_y_for_patterns(patterns, expected_result):
     X = []
     y = []
     for p in patterns:
         X.append(pattern_serie_to_vector(p))
-        y.append(p.result)
+        if (p.result == expected_result):
+            y.append(1)
+        else:
+            y.append(0)
     return X, y
