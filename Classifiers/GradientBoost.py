@@ -6,7 +6,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from PatternsCollector import get_patterns_for_window_and_num, get_x_y_for_patterns
 import seaborn
 
-patterns = get_patterns_for_window_and_num(3, 10, 10**5)
+patterns = get_patterns_for_window_and_num(3, 10)
 X, y = get_x_y_for_patterns(patterns, 'buy')
 nums = [10, 20, 40, 80, 160, 320]
 i = 0

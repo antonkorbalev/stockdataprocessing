@@ -17,3 +17,7 @@ class Config:
         self.stop_loss_value = 0
         self.take_profit_value = 0
         self.lot_size = 10000
+
+        # settings for candle analysis
+        self.candlePeriod = 'M'  # period
+        self.candleDiff = 15 # diff (in period value)

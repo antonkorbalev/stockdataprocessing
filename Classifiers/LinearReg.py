@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn
 
-patterns = get_patterns_for_window_and_num(3, 10, 10**6)
+patterns = get_patterns_for_window_and_num(3, 10)
 X, y = get_x_y_for_patterns(patterns, 'buy')
 sc = StandardScaler()
 X_sc = sc.fit_transform(X)

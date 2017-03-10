@@ -7,7 +7,6 @@ import re
 
 step = 60*360  # download step, s
 daysTotal = 1000 # download period, days
-candleDiff = 5 # s
 dbConf = DbConfig.DbConfig()
 conf = Config.Config()
 connect = psycopg2.connect(database=dbConf.dbname, user=dbConf.user, host=dbConf.address, password=dbConf.password)
@@ -57,11 +56,17 @@ def parse_date(dt):
 date = datetime.utcnow() - timedelta(days=daysTotal)
 dateStop = datetime.utcnow()
 
+candleDiff = conf.candleDiff
+if conf.candlePeriod == 'M':
+    candleDiff = candleDiff * 60
+if conf.candlePeriod == 'H':
+    candleDiff = candleDiff * 3600
+
 last_id = datetime.min
 while date < dateStop - timedelta(seconds=step):
     dateFrom = date
     dateTo = date + timedelta(seconds=step)
-    data = downloader.get_data_from_oanda_fx(oanda, conf.insName, 'S{0}'.format(candleDiff),
+    data = downloader.get_data_from_oanda_fx(oanda, conf.insName, '{0}{1}'.format(conf.candlePeriod, conf.candleDiff),
                                              dateFrom, dateTo)
     if len(data.get('candles')) > 0:
         cmd = ''
