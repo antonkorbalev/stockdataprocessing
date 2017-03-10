@@ -6,26 +6,26 @@ from sklearn.ensemble import GradientBoostingClassifier
 from PatternsCollector import get_patterns_for_window_and_num, get_x_y_for_patterns
 import seaborn
 
-patterns = get_patterns_for_window_and_num(3, 10, 100000)
+patterns = get_patterns_for_window_and_num(3, 10, 10**5)
 X, y = get_x_y_for_patterns(patterns, 'buy')
 nums = [10, 20, 40, 80, 160, 320]
 i = 0
-wrange = [1]
+wrange = [2]
 lrange = [10]
 values = list()
 legends = list()
 
 for wnd in wrange:
     for l in lrange:
-        kf = KFold(n_splits=5, shuffle=True, random_state=100)
         scores = []
 
         for n in nums:
             i = i+1
-            print 'Calculating {0}-{1}, num={2}, {3:.3f}%'.format(wnd, l, n, 100 * i/float((len(nums)*len(wrange)*len(lrange))))
+            kf = KFold(n_splits=5, shuffle=True, random_state=100)
             model = GradientBoostingClassifier(n_estimators=n, random_state=100)
             ms = cross_val_score(model, X, y, cv=kf, scoring='roc_auc')
             scores.append(np.mean(ms))
+            print 'Calculated {0}-{1}, num={2}, {3:.3f}%'.format(wnd, l, n, 100 * i/float((len(nums)*len(wrange)*len(lrange))))
         values.append(scores)
         legends.append('{0}-{1}'.format(wnd, l))
 

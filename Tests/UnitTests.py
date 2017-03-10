@@ -62,7 +62,7 @@ class GeneralTests(unittest.TestCase):
         self.assertTrue(len(result) > 0)
 
     def test_pattern_serie_to_vector(self):
-        c1 = Candle(datetime.now(),1,2,3)
+        c1 = Candle(datetime.now(),1, 2, 3)
         c2 = Candle(datetime.now(), 4, 5, 6)
         p = Pattern([c1,c2],'test')
         self.assertTrue(numpy.allclose(pattern_serie_to_vector(p), [1,2,3,4,5,6]))

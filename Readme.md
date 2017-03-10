@@ -3,6 +3,7 @@ This repo contains scripts for stock data analysis using various machine learnin
 
 # File structure
 * **Account** folder contains oanda account information (acc. no and token)
+* **Classifiers** folder contains various classifiers tests for DB data.
 * **Conf** folder contains configuration files for robots, stock data downloaders and algoritms.
 * **Tests** folder contains unit tests.
 * **Helpers** folder contains simple classes for data description.
