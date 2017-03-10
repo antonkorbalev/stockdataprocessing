@@ -6,7 +6,7 @@ import oandapyV20
 import re
 
 step = 60*360  # download step, s
-daysTotal = 1000 # download period, days
+daysTotal = 60 # download period, days
 dbConf = DbConfig.DbConfig()
 conf = Config.Config()
 connect = psycopg2.connect(database=dbConf.dbname, user=dbConf.user, host=dbConf.address, password=dbConf.password)
@@ -87,9 +87,10 @@ while date < dateStop - timedelta(seconds=step):
                                                    volume))
                     md = md + timedelta(seconds=candleDiff)
             last_id = id
-        cmd = cmd + cmd_bulk[:-2] + ';'
-        cursor.execute(cmd)
-        connect.commit()
+        if len(cmd_bulk) > 0:
+            cmd = cmd + cmd_bulk[:-2] + ';'
+            cursor.execute(cmd)
+            connect.commit()
     print ("Saved candles from {0} to {1}".format(dateFrom, dateTo))
     date = dateTo
 

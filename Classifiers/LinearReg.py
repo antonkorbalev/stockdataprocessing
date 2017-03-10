@@ -12,7 +12,7 @@ X, y = get_x_y_for_patterns(patterns, 'buy')
 sc = StandardScaler()
 X_sc = sc.fit_transform(X)
 
-cr = [10.0 ** i for i in range(-10, -2)]
+cr = [10.0 ** i for i in range(-5, 2)]
 i = 0
 wrange = [1]
 lrange = [10]
