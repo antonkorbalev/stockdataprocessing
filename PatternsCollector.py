@@ -71,7 +71,7 @@ def get_patterns_for_window_and_num(window, length, limit=None):
 def pattern_serie_to_vector(pattern):
     vec = []
     for candle in pattern.serie:
-        vec = numpy.hstack((vec, [ (candle.ask+candle.bid)/2 ]))
+        vec = numpy.hstack((vec, [ candle.ask, candle.bid, candle.volume ]))
     return vec
 
 
