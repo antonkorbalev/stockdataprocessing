@@ -62,10 +62,10 @@ class GeneralTests(unittest.TestCase):
         self.assertTrue(len(result) > 0)
 
     def test_pattern_serie_to_vector(self):
-        c1 = Candle(datetime.now(),1, 2, 3)
+        c1 = Candle(datetime.now(), 1, 2, 3)
         c2 = Candle(datetime.now(), 4, 5, 6)
         p = Pattern([c1,c2],'test')
-        self.assertTrue(numpy.allclose(pattern_serie_to_vector(p), [1,2,3,4,5,6]))
+        self.assertTrue(numpy.allclose(pattern_serie_to_vector(p), [0.5, 1.5]))
 
     def test_get_x_y_for_patterns(self):
         c1 = Candle(datetime.now(), 1, 2, 3)
@@ -76,8 +76,8 @@ class GeneralTests(unittest.TestCase):
         p1 = Pattern([c3,c4],'test2')
         X, y = get_x_y_for_patterns([p, p1],'test2')
         self.assertEqual(y, [0,1])
-        self.assertTrue(numpy.allclose(X[0], [1, 2, 3, 4, 5, 6]))
-        self.assertTrue(numpy.allclose(X[1], [7, 8, 9, 10, 11, 12]))
+        self.assertTrue(numpy.allclose(X[0], [0.5, 1.5]))
+        self.assertTrue(numpy.allclose(X[1], [0.83333333, 1.16666667]))
 
 if __name__ == '__main__':
     unittest.main()

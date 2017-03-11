@@ -74,7 +74,7 @@ while date < dateStop - timedelta(seconds=step):
         cmd_bulk = ''
         for candle in data.get('candles'):
             id = parse_date(candle.get('time'))
-            # add missing dates (when price does not change)
+            # add missing dates (when the price does not change)
             if last_id != datetime.min:
                 md = last_id + timedelta(seconds=candleDiff)
                 while md <= id:
