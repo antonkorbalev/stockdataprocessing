@@ -7,14 +7,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn
 
-patterns = get_patterns_for_window_and_num(3, 10)
-X, y = get_x_y_for_patterns(patterns, 'buy')
-sc = StandardScaler()
-X_sc = sc.fit_transform(X)
-
 cr = [10.0 ** i for i in range(-5, 2)]
 i = 0
-wrange = [1]
+wrange = [1,2]
 lrange = [10]
 values = list()
 legends = list()
@@ -22,6 +17,10 @@ legends = list()
 for wnd in wrange:
     for l in lrange:
         scores = []
+        patterns = get_patterns_for_window_and_num(wnd, l)
+        X, y = get_x_y_for_patterns(patterns, 'buy')
+        sc = StandardScaler()
+        X_sc = sc.fit_transform(X)
 
         for c in cr:
             i = i+1

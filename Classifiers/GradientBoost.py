@@ -6,8 +6,6 @@ from sklearn.ensemble import GradientBoostingClassifier
 from PatternsCollector import get_patterns_for_window_and_num, get_x_y_for_patterns
 import seaborn
 
-patterns = get_patterns_for_window_and_num(3, 10)
-X, y = get_x_y_for_patterns(patterns, 'buy')
 nums = [10, 20, 40, 80, 160, 320]
 i = 0
 wrange = [2]
@@ -18,6 +16,8 @@ legends = list()
 for wnd in wrange:
     for l in lrange:
         scores = []
+        patterns = get_patterns_for_window_and_num(wnd, l)
+        X, y = get_x_y_for_patterns(patterns, 'buy')
 
         for n in nums:
             i = i+1

@@ -35,7 +35,7 @@ def get_patterns_for_window_and_num(window, length, limit=None):
         if len(wl) == window+length:
             # find pattern of 0..length elements
             # that indicates price falls / grows
-            # in the next windows elements to get profit
+            # in the next window elements to get profit
             candle = wl[length-1]
             ind = length + 1
             # take real data only
@@ -52,7 +52,7 @@ def get_patterns_for_window_and_num(window, length, limit=None):
                             profits.append(iCandle.bid - candle.ask)
                             break
                         if iCandle.ask < candle.bid:
-                            # buy pattern
+                            # sell pattern
                             p = Pattern(wl[:length],'sell')
                             patterns.append(p)
                             indicies.append(ind - length)
@@ -71,7 +71,7 @@ def get_patterns_for_window_and_num(window, length, limit=None):
 def pattern_serie_to_vector(pattern):
     vec = []
     for candle in pattern.serie:
-        vec = numpy.hstack((vec, [candle.ask, candle.bid, candle.volume]))
+        vec = numpy.hstack((vec, [ (candle.ask+candle.bid)/2 ]))
     return vec
 
 
