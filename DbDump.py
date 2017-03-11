@@ -6,7 +6,7 @@ import oandapyV20
 import re
 
 step = 60*360  # download step, s
-daysTotal = 60 # download period, days
+daysTotal = 500 # download period, days
 dbConf = DbConfig.DbConfig()
 conf = Config.Config()
 connect = psycopg2.connect(database=dbConf.dbname, user=dbConf.user, host=dbConf.address, password=dbConf.password)
@@ -39,7 +39,9 @@ print 'Created table', tName
 downloader = StockDataDownloader.StockDataDownloader()
 oanda = oandapyV20.API(environment=conf.env, access_token=conf.token)
 
-def parse_date(dt):
+def parse_date(ts):
+    # parse date in RFC3339 format
+    """
     broken = re.search(
         r'([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(\.([0-9]+))?(Z|([+-][0-9]{2}):([0-9]{2}))',
         dt)
@@ -51,6 +53,9 @@ def parse_date(dt):
         minute=int(broken.group(5)),
         second=int(broken.group(6)),
         microsecond=int(broken.group(8) or "0")))
+    """
+    # parse date in UNIX time stamp
+    return datetime.fromtimestamp(float(ts))
 
 
 date = datetime.utcnow() - timedelta(days=daysTotal)

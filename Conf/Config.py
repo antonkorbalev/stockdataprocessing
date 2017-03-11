@@ -20,4 +20,4 @@ class Config:
 
         # settings for candle analysis
         self.candlePeriod = 'M'  # period
-        self.candleDiff = 5 # diff (in period value)
+        self.candleDiff = 15 # diff (in period value)
