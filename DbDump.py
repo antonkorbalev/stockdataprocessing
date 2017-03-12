@@ -80,9 +80,10 @@ while date < dateStop - timedelta(seconds=step):
         for candle in data.get('candles'):
             id = parse_date(candle.get('time'))
             # add missing dates (when the price does not change)
+            """
             if last_id != datetime.min:
                 md = last_id + timedelta(seconds=candleDiff)
-                while md <= id:
+                while md != id:
                     if last_id != md:
                         volume = candle.get('volume')
                         if (md != id):
@@ -91,6 +92,12 @@ while date < dateStop - timedelta(seconds=step):
                                            .format(md, candle.get('ask')['c'], candle.get('bid')['c'],
                                                    volume))
                     md = md + timedelta(seconds=candleDiff)
+            """
+            volume = candle.get('volume')
+            if volume != 0 and id!=last_id:
+                cmd_bulk = cmd_bulk + ("(TIMESTAMP '{0}',{1},{2},{3}),\n"
+                                   .format(id, candle.get('ask')['c'], candle.get('bid')['c'],
+                                           volume))
             last_id = id
         if len(cmd_bulk) > 0:
             cmd = cmd + cmd_bulk[:-2] + ';'
