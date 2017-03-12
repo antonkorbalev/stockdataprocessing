@@ -29,6 +29,7 @@ def checkDB_for_period():
             delta = timeStamp - lastTimeStamp
             if delta != timedelta(seconds=candleDiff):
                 print 'Error: difference in time is ', delta
+                error = True
                 break
         lastTimeStamp = timeStamp
 
