@@ -44,7 +44,7 @@ def parse_date(ts):
     """
     broken = re.search(
         r'([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(\.([0-9]+))?(Z|([+-][0-9]{2}):([0-9]{2}))',
-        dt)
+        ts)
     return (datetime(
         year=int(broken.group(1)),
         month=int(broken.group(2)),
